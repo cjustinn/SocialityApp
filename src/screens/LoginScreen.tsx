@@ -51,12 +51,13 @@ export default function LoginScreen({ navigation }: any) {
                 setLoading(false);
 
             }).catch(e => {
+                console.log(`login error: ${e.code}`);
                 const message = parseFirebaseErrorCode(e.code);
                 let _err = {};
 
-                if (e.code === "auth/invalid-email") {
+                if (e.code === "auth/user-not-found") {
                     _err.email = message;
-                } else if (e.code === "auth/invalid-password") {
+                } else if (e.code === "auth/wrong-password" || e.code === "auth/too-many-requests") {
                     _err.password = message;
                 }
 

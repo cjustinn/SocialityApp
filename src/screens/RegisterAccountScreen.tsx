@@ -46,8 +46,8 @@ export default function RegisterAccountScreen({ navigation }: any) {
         if (!('displayName' in registrationData) || registrationData.displayName.trim() === '') {
             _errs.displayName = "You must enter a display name.";
             success = false;
-        } else if (registrationData.displayName.trim().length < 2) {
-            _errs.displayName = "Your display name must be two or more characters long.";
+        } else if (registrationData.displayName.trim().length < 2 || registrationData.displayName.trim().length > 15) {
+            _errs.displayName = "Your display name must be between 2 and 15 characters.";
             success = false;
         }
 
@@ -73,8 +73,6 @@ export default function RegisterAccountScreen({ navigation }: any) {
     const handleSubmit = () => {
         if (validateRegistration()) {
             createUserWithEmailAndPassword(auth, registrationData.email.trim(), registrationData.password.trim()).then(credentials => {
-                console.log(`User created: UUID: ${credentials.user.uid}`);
-
                 let userData = {
                     userData: {
                         uuid: credentials.user.uid,

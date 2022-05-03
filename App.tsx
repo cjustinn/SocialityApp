@@ -10,6 +10,7 @@ import BottomTabNavigation from './src/navigation/BottomTabNavigation';
 import { NativeBaseProvider, useColorModeValue } from 'native-base';
 import { socialityColorModeManager, theme } from './src/services/Theme';
 import { Center } from 'native-base';
+import { UserContext } from './src/services/User';
 
 const BgWrapper = ({ children }) => {
   const bgColor = useColorModeValue("light.50", "dark.50");
@@ -20,7 +21,8 @@ const BgWrapper = ({ children }) => {
 
 export default function App() {
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{} | undefined>();
+  const [user, setUser] = useState(undefined);
+  const [ mongoUser, setMongoUser ] = useState(undefined);
 
   useEffect(() => {
     const unsubscribeToAuth = onAuthStateChanged(auth, (usr) => {
@@ -47,7 +49,9 @@ export default function App() {
         (
           <NavigationContainer>
             <StatusBar animated={true} translucent={true} backgroundColor="black" style="light" networkActivityIndicatorVisible={true} />
-            {user ? <BottomTabNavigation /> : <AuthNavigation />}
+            <UserContext.Provider value={{ user: mongoUser, setUser: setMongoUser }}>
+              {user ? <BottomTabNavigation /> : <AuthNavigation />}
+            </UserContext.Provider>
           </NavigationContainer>
         )
       }

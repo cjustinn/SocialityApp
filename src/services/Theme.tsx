@@ -2,7 +2,7 @@ import { ColorMode, extendTheme, StorageManager } from "native-base";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const theme = extendTheme({
-
+    
     config: {
         initialColorMode: 'dark'
     }

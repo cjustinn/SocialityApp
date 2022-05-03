@@ -37,6 +37,12 @@ export const parseFirebaseErrorCode = code => {
         case "auth/wrong-password":
             msg = "The entered password is incorrect."
             break;
+        case "auth/user-not-found":
+            msg = "There is no account associated with this email address.";
+            break;
+        case "auth/too-many-requests":
+            msg = "You have made too many login attempts! Please try again in a few minutes.";
+            break;
         default:
             msg = code;
             break;
