@@ -2,11 +2,12 @@ import { ScrollView, TouchableWithoutFeedback } from "react-native-gesture-handl
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Keyboard, RefreshControl } from 'react-native';
 import { useContext, useEffect, useRef, useState } from "react";
-import { useColorModeValue, Text, HStack, View, Icon, Button, VStack, Avatar, Center, Divider, Box, Spinner, Heading, IconButton, AlertDialog } from "native-base";
+import { useColorModeValue, Text, HStack, View, Icon, Button, VStack, Avatar, Center, Box, Spinner, Heading, IconButton, AlertDialog } from "native-base";
 import { UserContext } from "../services/User";
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { styles } from "../services/Styles";
 import { API_URL } from '@env';
+import { truncateNumber } from "../services/Utility";
 
 export default function ProfileScreen({ route, navigation }: any) {
     const { userId } = route.params;
@@ -175,15 +176,15 @@ export default function ProfileScreen({ route, navigation }: any) {
                             <HStack alignItems="center" space={5} alignContent="center" textAlign="center" px={20}>
                                 <VStack space={2} alignItems="center" w="33%">
                                     <Text color={useColorModeValue("light.100", "dark.100")} fontSize="sm" fontWeight="bold">Posts</Text>
-                                    <Text color={useColorModeValue("light.400", "dark.400")} fontSize="sm" fontWeight="normal">{profileCounts?.posts}</Text>
+                                    <Text color={useColorModeValue("light.400", "dark.400")} fontSize="sm" fontWeight="normal">{truncateNumber(profileCounts?.posts)}</Text>
                                 </VStack>
                                 <VStack space={2} alignItems="center" w="34%">
                                     <Text color={useColorModeValue("light.100", "dark.100")} fontSize="sm" fontWeight="bold">Followers</Text>
-                                    <Text color={useColorModeValue("light.400", "dark.400")} fontSize="sm" fontWeight="normal">{profileCounts?.followers}</Text>
+                                    <Text color={useColorModeValue("light.400", "dark.400")} fontSize="sm" fontWeight="normal">{truncateNumber(profileCounts?.followers)}</Text>
                                 </VStack>
                                 <VStack space={2} alignItems="center" w="33%">
                                     <Text color={useColorModeValue("light.100", "dark.100")} fontSize="sm" fontWeight="bold">Following</Text>
-                                    <Text color={useColorModeValue("light.400", "dark.400")} fontSize="sm" fontWeight="normal">{profileCounts?.following}</Text>
+                                    <Text color={useColorModeValue("light.400", "dark.400")} fontSize="sm" fontWeight="normal">{truncateNumber(profileCounts?.following)}</Text>
                                 </VStack>
                             </HStack>
                         </Center>
