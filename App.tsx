@@ -11,13 +11,9 @@ import { NativeBaseProvider, useColorModeValue } from 'native-base';
 import { socialityColorModeManager, theme } from './src/services/Theme';
 import { Center } from 'native-base';
 import { UserContext } from './src/services/User';
+import { LogBox } from 'react-native';
 
-const BgWrapper = ({ children }) => {
-  const bgColor = useColorModeValue("light.50", "dark.50");
-  return <Center flex={1} bg={bgColor}>
-    {children}
-  </Center>;
-}
+LogBox.ignoreLogs(['NativeBase:', 'Image URL']);
 
 export default function App() {
   const [loading, setLoading] = useState(true);

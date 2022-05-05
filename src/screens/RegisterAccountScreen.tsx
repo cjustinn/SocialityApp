@@ -1,6 +1,6 @@
 import { TouchableWithoutFeedback, Keyboard, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Center, Text, useColorModeValue, Box, FormControl, Input, Icon, Button } from "native-base";
+import { Center, Text, useColorModeValue, Box, FormControl, Input, Icon, Button, KeyboardAvoidingView } from "native-base";
 import { styles } from "../services/Styles";
 import { useState } from "react";
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -15,7 +15,7 @@ export default function RegisterAccountScreen({ navigation }: any) {
     const [ showPassword, setShowPassword ] = useState(false);
     const [ loading, setLoading ] = useState(false);
 
-    const validateRegistration = () => {
+    const validateRegistration = async () => {
         let success = true;
         let _errs = {};
 
@@ -34,12 +34,19 @@ export default function RegisterAccountScreen({ navigation }: any) {
         if (!('accountHandle' in registrationData) || registrationData.accountHandle.trim() === '') {
             _errs.accountHandle = "You must enter an account handle.";
             success = false;
-        } else if (registrationData.accountHandle.trim().includes("@")) {
+        } else if (registrationData.accountHandle.trim().includes("@") || registrationData.accountHandle.trim().includes(" ")) {
             _errs.accountHandle = "The entered account handle includes banned characters.";
             success = false;
-        } else if (registrationData.accountHandle.trim().length < 2) {
-            _errs.accountHandle = "Your account hande must be two or more characters long.";
+        } else if (registrationData.accountHandle.trim().length < 2 || registrationData.accountHandle.trim().length > 15) {
+            _errs.accountHandle = "Your account hande must be between two and fifteen characters long.";
             success = false;
+        } else {
+            const AHEndpoint = `${API_URL}api/users/handle/${registrationData.accountHandle.trim()}`;
+            let inUse = await fetch(AHEndpoint).then(d => d.json());
+            if (inUse) {
+                _errs.accountHandle = `The entered account handle is already in use!`;
+                success = false;
+            }
         }
 
         // Display name testing
@@ -70,8 +77,8 @@ export default function RegisterAccountScreen({ navigation }: any) {
         return success;
     }
 
-    const handleSubmit = () => {
-        if (validateRegistration()) {
+    const handleSubmit = async () => {
+        if (await validateRegistration()) {
             createUserWithEmailAndPassword(auth, registrationData.email.trim(), registrationData.password.trim()).then(credentials => {
                 let userData = {
                     userData: {
@@ -109,7 +116,7 @@ export default function RegisterAccountScreen({ navigation }: any) {
     return (
         <SafeAreaView>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <View>
+                <KeyboardAvoidingView>
                     <Center my={12}>
                         <Text fontSize="4xl" fontWeight="thin" color={useColorModeValue("light.50", "dark.50")}>Sociality</Text>
                     </Center>
@@ -156,7 +163,7 @@ export default function RegisterAccountScreen({ navigation }: any) {
                             <Text color={useColorModeValue("light.50", "dark.50")}>Already have an account? <Text color={useColorModeValue("info.400", "info.700")} onPress={() => navigation.goBack()}>Log-in now!</Text></Text>
                         </Center>
                     </Box>
-                </View>
+                </KeyboardAvoidingView>
             </TouchableWithoutFeedback>
         </SafeAreaView>
     )

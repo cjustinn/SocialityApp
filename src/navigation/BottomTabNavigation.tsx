@@ -33,7 +33,7 @@ export default function BottomTabNavigation() {
                 ),
                 tabBarActiveTintColor: "#a78bfa"
             }}/>
-            <BottomTabs.Screen name="Profile" component={ProfileNavigation} options={{
+            <BottomTabs.Screen name="ProfileNav" component={ProfileNavigation} options={{
                 tabBarLabel: "Profile",
                 tabBarIcon: ({ color, size }) => (
                     <MaterialIcons name="person" color={color} size={size}/>
