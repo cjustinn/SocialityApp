@@ -124,7 +124,7 @@ export default function EditProfileScreen() {
                         </FormControl>
                         <FormControl>
                             <FormControl.Label>Profile Bio</FormControl.Label>
-                            <TextArea value={values.profileBio} onChangeText={v => setValues({ ...values, profileBio: v })} isInvalid={`profileBio` in errors} placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent neque justo, lobortis non diam sit amet, dapibus vulputate erat. Aenean non nisl at."/>
+                            <TextArea color={useColorModeValue("light.50", "dark.50")} value={values.profileBio} onChangeText={v => setValues({ ...values, profileBio: v })} isInvalid={`profileBio` in errors} placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent neque justo, lobortis non diam sit amet, dapibus vulputate erat. Aenean non nisl at."/>
                             {
                                 'profileBio' in errors ?
                                     <FormControl.ErrorMessage>{errors.profileBio}</FormControl.ErrorMessage>

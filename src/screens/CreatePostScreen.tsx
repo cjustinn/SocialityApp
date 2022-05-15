@@ -39,7 +39,8 @@ export default function CreatePostScreen({ navigation }) {
             const PostEndpoint = `${API_URL}api/posts`;
             const newPost = {
                 poster: user ? user?._id : null,
-                text: postData.text
+                text: postData.text,
+                postDate: Date.now()
             }
 
             fetch(PostEndpoint, {
