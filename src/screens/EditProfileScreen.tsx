@@ -1,4 +1,4 @@
-import { FormControl, HStack, Input, ScrollView, Switch, TextArea, useColorModeValue, VStack, Text, Button } from "native-base";
+import { FormControl, HStack, Input, ScrollView, Switch, TextArea, useColorModeValue, VStack, Text, Button, useToast, Box } from "native-base";
 import { useState } from "react";
 import { useEffect } from "react";
 import { useContext } from "react";
@@ -6,20 +6,85 @@ import { TouchableWithoutFeedback, Keyboard } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UserContext } from "../services/User";
 
+import { API_URL } from '@env';
+
 export default function EditProfileScreen() {
 
-    const { user } = useContext(UserContext);
+    const { user, setUser } = useContext(UserContext);
     const [values, setValues] = useState({});
     const [errors, setErrors] = useState({});
 
+    const ToastController = useToast();
+
     let submitEdits = async () => {
         if (await validateEdits()) {
-
+            const UpdateEndpoint = `${API_URL}api/users/${user ? user._id : "invalid_user"}`;
+            fetch(UpdateEndpoint, {
+                method: "PUT",
+                body: JSON.stringify({
+                    userData: values
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then((updatedUser) => {
+                setUser(updatedUser);
+                ToastController.show({
+                    render: () => {
+                        return (
+                            <Box backgroundColor="emerald.400" px={2} py={2}>
+                                <Text color="light.50">Successfully updated your profile.</Text>
+                            </Box>
+                        )
+                    }
+                });
+            }).catch(err => {
+                ToastController.show({
+                    render: () => {
+                        return (
+                            <Box backgroundColor="red.400" px={2} py={2}>
+                                <Text color="light.50">Could not update your profile. Please try again.</Text>
+                            </Box>
+                        )
+                    }
+                });
+            });
         }
     }
 
     let validateEdits = async () => {
         let success = true;
+        let errs = {};
+
+        
+        if (!('accountHandle' in values) || values?.accountHandle.trim() === '') {
+            errs = { ...errs, accountHandle: `You must enter an account handle.` };
+            success = false;
+        } else if (values.accountHandle.trim().includes("@") || values.accountHandle.trim().includes(" ")) {
+            errs = { ...errs, accountHandle: `The entered account handle contains banned characters.` };
+            success = false;
+        } else if (values.accountHandle.trim().length < 2 || values.accountHandle.trim().length > 15) {
+            errs = { ...errs, accountHandle: `Your account handle must be between two and fifteen characters.` };
+            success = false;
+        } else {
+            const AHEndpoint = `${API_URL}api/users/handle/${values.accountHandle.trim()}`;
+            let inUse = await fetch(AHEndpoint).then(d => d.json());
+            if (inUse && user?.accountHandle != values.accountHandle) {
+                errs = { ...errs, accountHandle: `The account handle you have entered is already in use.` };
+                success = false;
+            }
+        }
+        
+        if (!('displayName' in values) || values?.displayName.trim() === '') {
+            errs = { ...errs, displayName: "You must enter a display name." };
+            success = false;
+        } else if (values?.displayName.trim().length < 2 || values?.displayName.trim().length > 15) {
+            errs = { ...errs, displayName: "Your display name must be between two and fifteen characters." };
+            success = false;
+        }
+
+        setErrors(errs);
+
         return success;
     }
 
@@ -75,7 +140,7 @@ export default function EditProfileScreen() {
                             </HStack>
                         </FormControl>
 
-                        <Button onPress={() => console.log("submitted changes")} backgroundColor="violet.400">Update Profile</Button>
+                        <Button onPress={submitEdits} backgroundColor="violet.400">Update Profile</Button>
                     </VStack>
                 </TouchableWithoutFeedback>
             </ScrollView>

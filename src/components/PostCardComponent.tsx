@@ -3,18 +3,47 @@ import { useContext, useEffect, useState } from "react";
 import { UserContext } from "../services/User";
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { API_URL } from '@env';
-import { dateIsTomorrow, formatDate, formatTime, todayIsDayAfter, truncateNumber } from "../services/Utility";
+import { formatDate, formatTime, todayIsDayAfter, truncateNumber } from "../services/Utility";
 
 export default function PostCardComponent(props) {
 
-    const [ loading, setLoading ] = useState(true);
-    const [ postIsLiked, setPostIsLiked ] = useState(false);
-    const [ post, setPost ] = useState(undefined);
-    const [ isRegisteringLike, setIsRegisteringLike ] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [postIsLiked, setPostIsLiked] = useState(false);
+    const [post, setPost] = useState(undefined);
+    const [isRegisteringLike, setIsRegisteringLike] = useState(false);
 
     const { user } = useContext(UserContext);
 
     const toastHandler = useToast();
+
+    let card = null;
+
+    const handleDelete = () => {
+        const DeletePostEndpoint = `${API_URL}api/posts/${post?._id}`;
+        fetch(DeletePostEndpoint, {
+            method: 'DELETE'
+        }).then(() => {
+            toastHandler.show({
+                render: () => {
+                    return (
+                        <Box backgroundColor="emerald.500" px={2} py={4}>
+                            <Text color="light.50">Your post was successfully deleted!</Text>
+                        </Box>
+                    )
+                }
+            });
+        }).catch(err => {
+            toastHandler.show({
+                render: () => {
+                    return (
+                        <Box backgroundColor="red.500" px={2} py={4}>
+                            <Text color="light.50">There was a problem deleting your post!</Text>
+                        </Box>
+                    )
+                }
+            });
+        })
+    }
 
     const handleLike = () => {
         setIsRegisteringLike(true);
@@ -26,7 +55,7 @@ export default function PostCardComponent(props) {
             fetch(UnlikeEndpoint, {
                 method: 'DELETE'
             }).then(() => {
-                
+
                 const PostLikesEndpoint = `${API_URL}api/likes/count/${post._id}`;
                 fetch(PostLikesEndpoint).then(response => response.json()).then(data => {
                     setPost({ ...post, likes: data.data });
@@ -69,7 +98,7 @@ export default function PostCardComponent(props) {
                     "Content-Type": "application/json"
                 }
             }).then(() => {
-                setPost({ ...post, likes: (post.likes + 1)});
+                setPost({ ...post, likes: (post.likes + 1) });
                 setPostIsLiked(true);
             }).catch(err => {
                 toastHandler.show({
@@ -108,12 +137,10 @@ export default function PostCardComponent(props) {
 
     }, []);
 
-    let card = null;
-
     if (loading) {
         card = (
             <HStack space={2}>
-                <Spinner color={useColorModeValue("light.50", "dark.50")} size="lg"/>
+                <Spinner color={useColorModeValue("light.50", "dark.50")} size="lg" />
                 <Text color={useColorModeValue("light.50", "dark.50")} fontWeight="bold" fontSize="xl">Loading...</Text>
             </HStack>
         );
@@ -129,9 +156,9 @@ export default function PostCardComponent(props) {
                                 {post?.poster?.displayName.substring(0, 1)}
                                 {
                                     post?.poster?.isVerified ?
-                                    <Avatar.Badge bgColor="violet.400" flexDirection="row" alignItems="center" justifyContent="center" borderColor={ useColorModeValue("dark.50", "light.100") }><Icon as={<MaterialIcons name="verified"/>} size="xs" color="violet.300"/></Avatar.Badge>
-                                    :
-                                    null
+                                        <Avatar.Badge bgColor="violet.400" flexDirection="row" alignItems="center" justifyContent="center" borderColor={useColorModeValue("dark.50", "light.100")}><Icon as={<MaterialIcons name="verified" />} size="xs" color="violet.300" /></Avatar.Badge>
+                                        :
+                                        null
                                 }
                             </Avatar>
                             <VStack space={0}>
@@ -140,22 +167,31 @@ export default function PostCardComponent(props) {
                             </VStack>
                         </HStack>
 
-                        <Divider backgroundColor={ useColorModeValue("light.700", "dark.600") } my={1}/>
+                        <Divider backgroundColor={useColorModeValue("light.700", "dark.600")} my={1} />
 
                         <Box backgroundColor="transparent" px={3} flexDirection="row">
                             <Text color={useColorModeValue("light.50", "dark.50")} fontSize="md">{post?.text}</Text>
                         </Box>
 
-                        <Divider backgroundColor={ useColorModeValue("light.700", "dark.600") } mt={1}/>
+                        <Divider backgroundColor={useColorModeValue("light.700", "dark.600")} mt={1} />
 
                         <HStack space={3} justifyContent="space-between" alignItems="center" w="100%" maxW="100%">
-                            <Text color={useColorModeValue("light.400", "dark.400")}>{
-                                todayIsDayAfter(post?.postDate) ?
-                                formatDate(post?.postDate, 'MMM Do, YYYY')
-                                :
-                                `Today at ${formatTime(post?.postDate, 'h:mm A')}`
-                            }</Text>
-                            <Button disabled={isRegisteringLike} variant="unstyled" onPress={handleLike} rightIcon={<Icon as={<MaterialIcons name={ postIsLiked ? "favorite" : "favorite-outline" }/>} size="sm" color={ postIsLiked ? "red.500" : useColorModeValue("light.400", "dark.400") }/>}><Text color={ useColorModeValue("light.400", "dark.400") } fontSize="md">{truncateNumber(post?.likes)}</Text></Button>
+                            <HStack alignItems="center" space={2}>
+                                {
+                                    user?._id == post?.poster?._id ?
+                                        <IconButton onPress={handleDelete} icon={<Icon color={useColorModeValue("light.400", "dark.400")} size="sm" as={<MaterialIcons name="delete" />} />} borderRadius="full" />
+                                        : null
+                                }
+                                <Text color={useColorModeValue("light.400", "dark.400")}>{
+                                    todayIsDayAfter(post?.postDate) ?
+                                        formatDate(post?.postDate, 'MMM Do, YYYY')
+                                        :
+                                        `Today at ${formatTime(post?.postDate, 'h:mm A')}`
+                                }</Text>
+                            </HStack>
+                            <HStack>
+                                <Button disabled={isRegisteringLike || user?._id == post?.poster?._id} variant="unstyled" onPress={handleLike} rightIcon={<Icon as={<MaterialIcons name={postIsLiked ? "favorite" : "favorite-outline"} />} size="sm" color={postIsLiked ? "red.500" : useColorModeValue("light.400", "dark.400")} />}><Text color={useColorModeValue("light.400", "dark.400")} fontSize="md">{truncateNumber(post?.likes)}</Text></Button>
+                            </HStack>
                         </HStack>
                     </VStack>
                 </Box>

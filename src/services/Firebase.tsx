@@ -24,6 +24,8 @@ const config = {
     measurementId: MEASUREMENT_ID
 };
 
+console.log(JSON.stringify(config));
+
 export const app = getApps().length > 0 ? getApp() : initializeApp(config);
 export const _auth = initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) });
 export const auth = _auth ? getAuth() : _auth;
