@@ -1,19 +1,19 @@
-import { TouchableWithoutFeedback, Keyboard, View } from "react-native";
+import React from 'react';
+import { TouchableWithoutFeedback, Keyboard } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Center, Text, useColorModeValue, Box, FormControl, Input, Icon, Button, KeyboardAvoidingView } from "native-base";
+import { Center, Text, useColorModeValue, Box, FormControl, Input, Icon, Button, KeyboardAvoidingView, ScrollView, View } from "native-base";
 import { styles } from "../services/Styles";
 import { useState } from "react";
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, parseFirebaseErrorCode } from "../services/Firebase";
 import { API_URL } from '@env';
-import { convertAbsoluteToRem } from "native-base/lib/typescript/theme/tools";
 
 export default function RegisterAccountScreen({ navigation }: any) {
-    const [ errors, setErrors ] = useState({});
-    const [ registrationData, setRegistrationData ] = useState({});
-    const [ showPassword, setShowPassword ] = useState(false);
-    const [ loading, setLoading ] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [registrationData, setRegistrationData] = useState({});
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const validateRegistration = async () => {
         let success = true;
@@ -43,7 +43,7 @@ export default function RegisterAccountScreen({ navigation }: any) {
         } else {
             const AHEndpoint = `${API_URL}api/users/handle/${registrationData.accountHandle.trim()}`;
             let inUse = await fetch(AHEndpoint).then(d => d.json());
-            if (inUse) {
+            if (inUse.data) {
                 _errs.accountHandle = `The entered account handle is already in use!`;
                 success = false;
             }
@@ -78,6 +78,8 @@ export default function RegisterAccountScreen({ navigation }: any) {
     }
 
     const handleSubmit = async () => {
+        setLoading(true);
+
         if (await validateRegistration()) {
             createUserWithEmailAndPassword(auth, registrationData.email.trim(), registrationData.password.trim()).then(credentials => {
                 let userData = {
@@ -100,10 +102,25 @@ export default function RegisterAccountScreen({ navigation }: any) {
                 }).then(result => {
                     return result.json();
                 }).then((data) => {
-                    
+
                     updateProfile(credentials.user, {
                         displayName: registrationData.accountHandle.trim().toLowerCase()
                     }).catch(err => setErrors({ passwordMatch: parseFirebaseErrorCode(err.code) }));
+
+                    // Follow the official Sociality account by default.
+                    const SocialityEndpoint = `${API_URL}api/follow`;
+                    fetch(SocialityEndpoint, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            followData: {
+                                follower: data.data._id,
+                                followed: "62707d9d40fa62f46f6ca01f"
+                            }
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
 
                 }).catch(err => console.log(`API CALL FAILED: ${err}`));
 
@@ -111,61 +128,65 @@ export default function RegisterAccountScreen({ navigation }: any) {
                 setErrors({ passwordMatch: parseFirebaseErrorCode(err.code) });
             });
         }
+
+        setLoading(false);
     }
 
     return (
         <SafeAreaView>
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <KeyboardAvoidingView>
-                    <Center my={12}>
-                        <Text fontSize="4xl" fontWeight="thin" color={useColorModeValue("light.50", "dark.50")}>Sociality</Text>
-                    </Center>
-                    <Box style={styles.container} backgroundColor={useColorModeValue("dark.100", "light.50")}>
-                        <Center my={4}>
-                            <Text fontSize="2xl" fontWeight="bold" color={useColorModeValue("light.50", "dark.50")}>Create an Account</Text>
+            <ScrollView>
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View>
+                        <Center my={12}>
+                            <Text fontSize="4xl" fontWeight="thin" color={useColorModeValue("light.50", "dark.50")}>Sociality</Text>
                         </Center>
+                        <Box style={styles.container} backgroundColor={useColorModeValue("dark.100", "light.50")}>
+                            <Center my={4}>
+                                <Text fontSize="2xl" fontWeight="bold" color={useColorModeValue("light.50", "dark.50")}>Create an Account</Text>
+                            </Center>
 
-                        <FormControl mb={2} isRequired isInvalid={'email' in errors}>
-                            <FormControl.Label>Email Address</FormControl.Label>
-                            <Input variant="outline" p={2} placeholder="example@domain.ca" value={registrationData.email} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} onChangeText={ value => setRegistrationData({ ...registrationData, email: value })}/>
-                            { 'email' in errors ? <FormControl.ErrorMessage>{errors.email}</FormControl.ErrorMessage> : null}
-                        </FormControl>
+                            <FormControl mb={2} isRequired isInvalid={'email' in errors}>
+                                <FormControl.Label>Email Address</FormControl.Label>
+                                <Input variant="outline" p={2} placeholder="example@domain.ca" value={registrationData.email} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} onChangeText={value => setRegistrationData({ ...registrationData, email: value })} />
+                                {'email' in errors ? <FormControl.ErrorMessage>{errors.email}</FormControl.ErrorMessage> : null}
+                            </FormControl>
 
-                        <FormControl mb={2} isRequired isInvalid={'accountHandle' in errors}>
-                            <FormControl.Label>Account Handle</FormControl.Label>
-                            <Input variant="outline" p={2} placeholder="john.doe" value={registrationData.accountHandle} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} onChangeText={ value => setRegistrationData({ ...registrationData, accountHandle: value })}/>
-                            { 'accountHandle' in errors ? <FormControl.ErrorMessage>{errors.accountHandle}</FormControl.ErrorMessage> : <FormControl.HelperText>Your account handle is your profile's unique public identifier!</FormControl.HelperText>}
-                        </FormControl>
+                            <FormControl mb={2} isRequired isInvalid={'accountHandle' in errors}>
+                                <FormControl.Label>Account Handle</FormControl.Label>
+                                <Input variant="outline" p={2} placeholder="john.doe" value={registrationData.accountHandle} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} onChangeText={value => setRegistrationData({ ...registrationData, accountHandle: value })} />
+                                {'accountHandle' in errors ? <FormControl.ErrorMessage>{errors.accountHandle}</FormControl.ErrorMessage> : <FormControl.HelperText>Your account handle is your profile's unique public identifier!</FormControl.HelperText>}
+                            </FormControl>
 
-                        <FormControl mb={2} isRequired isInvalid={'displayName' in errors}>
-                            <FormControl.Label>Display Name</FormControl.Label>
-                            <Input variant="outline" p={2} placeholder="John Doe" value={registrationData.displayName} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} onChangeText={ value => setRegistrationData({ ...registrationData, displayName: value })}/>
-                            { 'displayName' in errors ? <FormControl.ErrorMessage>{errors.displayName}</FormControl.ErrorMessage> : <FormControl.HelperText>Your display name is your public, non-unique display name which will be used as a contact / poster name.</FormControl.HelperText>}
-                        </FormControl>
+                            <FormControl mb={2} isRequired isInvalid={'displayName' in errors}>
+                                <FormControl.Label>Display Name</FormControl.Label>
+                                <Input variant="outline" p={2} placeholder="John Doe" value={registrationData.displayName} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} onChangeText={value => setRegistrationData({ ...registrationData, displayName: value })} />
+                                {'displayName' in errors ? <FormControl.ErrorMessage>{errors.displayName}</FormControl.ErrorMessage> : <FormControl.HelperText>Your display name is your public, non-unique display name which will be used as a contact / poster name.</FormControl.HelperText>}
+                            </FormControl>
 
-                        <FormControl mb={2} isRequired isInvalid={'password' in errors || 'passwordMatch' in errors}>
-                            <FormControl.Label>Password</FormControl.Label>
-                            <Input variant="outline" type={ showPassword ? "text" : "password" } p={2} placeholder="Password" value={registrationData.password} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} onChangeText={ value => setRegistrationData({ ...registrationData, password: value })} InputRightElement={<Icon onPress={() => setShowPassword(!showPassword)} as={ showPassword ? <MaterialIcons name="visibility"/> : <MaterialIcons name="visibility-off"/>} size={5} mr={2} color="muted.400"/>}/>
-                            { 'password' in errors ? <FormControl.ErrorMessage>{errors.password}</FormControl.ErrorMessage> : null }
-                            { 'passwordMatch' in errors ? <FormControl.ErrorMessage>{errors.passwordMatch}</FormControl.ErrorMessage> : null }
-                            { !('password' in errors) && !('passwordMatch' in errors) ? <FormControl.HelperText>Your password must be 5 characters long, and contain an uppercase letter, lowercase letter, and a number.</FormControl.HelperText> : null }
-                        </FormControl>
+                            <FormControl mb={2} isRequired isInvalid={'password' in errors || 'passwordMatch' in errors}>
+                                <FormControl.Label>Password</FormControl.Label>
+                                <Input variant="outline" type={showPassword ? "text" : "password"} p={2} placeholder="Password" value={registrationData.password} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} onChangeText={value => setRegistrationData({ ...registrationData, password: value })} InputRightElement={<Icon onPress={() => setShowPassword(!showPassword)} as={showPassword ? <MaterialIcons name="visibility" /> : <MaterialIcons name="visibility-off" />} size={5} mr={2} color="muted.400" />} />
+                                {'password' in errors ? <FormControl.ErrorMessage>{errors.password}</FormControl.ErrorMessage> : null}
+                                {'passwordMatch' in errors ? <FormControl.ErrorMessage>{errors.passwordMatch}</FormControl.ErrorMessage> : null}
+                                {!('password' in errors) && !('passwordMatch' in errors) ? <FormControl.HelperText>Your password must be 5 characters long, and contain an uppercase letter, lowercase letter, and a number.</FormControl.HelperText> : null}
+                            </FormControl>
 
-                        <FormControl mb={2} isRequired isInvalid={'passwordMatch' in errors}>
-                            <FormControl.Label>Confirm Password</FormControl.Label>
-                            <Input variant="outline" type={ showPassword ? "text" : "password" } p={2} placeholder="Confirm Password" value={registrationData.passwordMatch} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} onChangeText={ value => setRegistrationData({ ...registrationData, passwordMatch: value })} InputRightElement={<Icon onPress={() => setShowPassword(!showPassword)} as={ showPassword ? <MaterialIcons name="visibility"/> : <MaterialIcons name="visibility-off"/>} size={5} mr={2} color="muted.400"/>}/>
-                            { 'passwordMatch' in errors ? <FormControl.ErrorMessage>{errors.passwordMatch}</FormControl.ErrorMessage> : null }
-                        </FormControl>
+                            <FormControl mb={2} isRequired isInvalid={'passwordMatch' in errors}>
+                                <FormControl.Label>Confirm Password</FormControl.Label>
+                                <Input variant="outline" type={showPassword ? "text" : "password"} p={2} placeholder="Confirm Password" value={registrationData.passwordMatch} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} onChangeText={value => setRegistrationData({ ...registrationData, passwordMatch: value })} InputRightElement={<Icon onPress={() => setShowPassword(!showPassword)} as={showPassword ? <MaterialIcons name="visibility" /> : <MaterialIcons name="visibility-off" />} size={5} mr={2} color="muted.400" />} />
+                                {'passwordMatch' in errors ? <FormControl.ErrorMessage>{errors.passwordMatch}</FormControl.ErrorMessage> : null}
+                            </FormControl>
 
-                        <Button mt={6} onPress={handleSubmit} isLoading={loading} backgroundColor="violet.400"><Text color="light.50" fontSize="lg">Complete Registration</Text></Button>
-                        
-                        <Center my={4}>
-                            <Text color={useColorModeValue("light.50", "dark.50")}>Already have an account? <Text color={useColorModeValue("info.400", "info.700")} onPress={() => navigation.goBack()}>Log-in now!</Text></Text>
-                        </Center>
-                    </Box>
-                </KeyboardAvoidingView>
-            </TouchableWithoutFeedback>
+                            <Button mt={6} onPress={handleSubmit} disabled={loading} isLoading={loading} backgroundColor="violet.400"><Text color="light.50" fontSize="lg">Complete Registration</Text></Button>
+
+                            <Center my={4}>
+                                <Text color={useColorModeValue("light.50", "dark.50")}>Already have an account? <Text color={useColorModeValue("info.400", "info.700")} onPress={() => navigation.goBack()}>Log-in now!</Text></Text>
+                            </Center>
+                        </Box>
+                    </View>
+                </TouchableWithoutFeedback>
+            </ScrollView>
         </SafeAreaView>
-    )
+    );
 
 }

@@ -1,6 +1,6 @@
-import { TouchableWithoutFeedback } from "react-native-gesture-handler";
+import React from 'react';
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Keyboard, RefreshControl, ScrollView } from 'react-native';
+import { RefreshControl, ScrollView } from 'react-native';
 import { useContext, useEffect, useRef, useState } from "react";
 import { useColorModeValue, Text, HStack, View, Icon, Button, VStack, Avatar, Center, Box, Spinner, Heading, IconButton, AlertDialog, Pressable, theme, useToast } from "native-base";
 import { UserContext } from "../services/User";
@@ -189,12 +189,6 @@ export default function ProfileScreen({ route, navigation }: any) {
 
         setLoading(false);
     }
-
-    useEffect(() => {
-        if (profileIsFocused) {
-            loadUserDetails();
-        }
-    }, [profileIsFocused]);
 
     useEffect(() => {
 

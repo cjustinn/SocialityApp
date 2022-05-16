@@ -1,11 +1,15 @@
+import React from 'react';
 import { Avatar, Box, Button, Divider, HStack, Icon, IconButton, Spinner, Text, useColorModeValue, useToast, VStack } from "native-base";
 import { useContext, useEffect, useState } from "react";
 import { UserContext } from "../services/User";
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { API_URL } from '@env';
 import { formatDate, formatTime, todayIsDayAfter, truncateNumber } from "../services/Utility";
+import { Pressable } from 'react-native';
 
 export default function PostCardComponent(props) {
+
+    const { navigation, darkBackgroundColor, lightBackgroundColor } = props;
 
     const [loading, setLoading] = useState(true);
     const [postIsLiked, setPostIsLiked] = useState(false);
@@ -149,23 +153,25 @@ export default function PostCardComponent(props) {
         if (post) {
 
             card = (
-                <Box backgroundColor={useColorModeValue("dark.50", "light.100")} px={4} py={4} rounded="lg">
+                <Box backgroundColor={useColorModeValue(darkBackgroundColor ? darkBackgroundColor : "dark.50", lightBackgroundColor ? lightBackgroundColor : "light.100")} px={4} py={4} rounded="lg">
                     <VStack space={3}>
-                        <HStack space={2}>
-                            <Avatar shadow={2} size="md" fontSize="md" bgColor={useColorModeValue("light.200", "dark.200")} source={{ uri: "https://previews.dropbox.com/p/thumb/ABgaFcMCwD2Ov0_B1z3vcQV6P5U9_BcgA2m5zF1_npQv5rAC95UdB8VUf7-CIhfN3Xdctk1y2tzaoL4-U4piggjysgsGXwivdK3B_VIgJ7eMp9Mr5w2A_QYOWmCJnLmPQt_uW5VTzJaDK07CH4xlMRChBr-PnKyrxBBL1xX4M3wON5kY0bh7l1GksLyMqqgXTrmMc_dmJpBVedNpzqeJL1BECIUK9xILcZmSMRAxv0XSTv4hgkF1HNNgl95sQwdkESxjvAlI-p2lwK2Z9oNGjcCDWJNfWDnR9RTfnLNMI7PepLogCDMMQIMTdMtmfndyoJa0gtI3wSRBmR3Ev2H6D1vhaYKOf-XfK4vtUOXG-9NcAE7XBgUvHXbrx7I6Qh3sdQY/p.png" }}>
-                                {post?.poster?.displayName.substring(0, 1)}
-                                {
-                                    post?.poster?.isVerified ?
-                                        <Avatar.Badge bgColor="violet.400" flexDirection="row" alignItems="center" justifyContent="center" borderColor={useColorModeValue("dark.50", "light.100")}><Icon as={<MaterialIcons name="verified" />} size="xs" color="violet.300" /></Avatar.Badge>
-                                        :
-                                        null
-                                }
-                            </Avatar>
-                            <VStack space={0}>
-                                <Text color={useColorModeValue("light.50", "dark.50")} fontWeight="bold" fontSize="lg">{post?.poster?.displayName}</Text>
-                                <Text color={useColorModeValue("light.400", "dark.400")} fontSize="sm">@{post?.poster?.accountHandle}</Text>
-                            </VStack>
-                        </HStack>
+                        <Pressable onPress={navigation ? () => navigation.navigate('profile', { userId: post?.poster?._id}) : null}>
+                            <HStack space={2}>
+                                <Avatar shadow={2} size="md" fontSize="md" bgColor={useColorModeValue("light.200", "dark.200")} source={{ uri: "https://previews.dropbox.com/p/thumb/ABgaFcMCwD2Ov0_B1z3vcQV6P5U9_BcgA2m5zF1_npQv5rAC95UdB8VUf7-CIhfN3Xdctk1y2tzaoL4-U4piggjysgsGXwivdK3B_VIgJ7eMp9Mr5w2A_QYOWmCJnLmPQt_uW5VTzJaDK07CH4xlMRChBr-PnKyrxBBL1xX4M3wON5kY0bh7l1GksLyMqqgXTrmMc_dmJpBVedNpzqeJL1BECIUK9xILcZmSMRAxv0XSTv4hgkF1HNNgl95sQwdkESxjvAlI-p2lwK2Z9oNGjcCDWJNfWDnR9RTfnLNMI7PepLogCDMMQIMTdMtmfndyoJa0gtI3wSRBmR3Ev2H6D1vhaYKOf-XfK4vtUOXG-9NcAE7XBgUvHXbrx7I6Qh3sdQY/p.png" }}>
+                                    {post?.poster?.displayName.substring(0, 1)}
+                                    {
+                                        post?.poster?.isVerified ?
+                                            <Avatar.Badge bgColor="violet.400" flexDirection="row" alignItems="center" justifyContent="center" borderColor={useColorModeValue("dark.50", "light.100")}><Icon as={<MaterialIcons name="verified" />} size="xs" color="violet.300" /></Avatar.Badge>
+                                            :
+                                            null
+                                    }
+                                </Avatar>
+                                <VStack space={0}>
+                                    <Text color={useColorModeValue("light.50", "dark.50")} fontWeight="bold" fontSize="lg">{post?.poster?.displayName}</Text>
+                                    <Text color={useColorModeValue("light.400", "dark.400")} fontSize="sm">@{post?.poster?.accountHandle}</Text>
+                                </VStack>
+                            </HStack>
+                        </Pressable>
 
                         <Divider backgroundColor={useColorModeValue("light.700", "dark.600")} my={1} />
 

@@ -1,3 +1,4 @@
+import React from 'react';
 import { FormControl, HStack, Input, ScrollView, Switch, TextArea, useColorModeValue, VStack, Text, Button, useToast, Box } from "native-base";
 import { useState } from "react";
 import { useEffect } from "react";
@@ -14,9 +15,13 @@ export default function EditProfileScreen() {
     const [values, setValues] = useState({});
     const [errors, setErrors] = useState({});
 
+    const [ updating, setUpdating ] = useState(false);
+
     const ToastController = useToast();
 
     let submitEdits = async () => {
+        setUpdating(true);
+
         if (await validateEdits()) {
             const UpdateEndpoint = `${API_URL}api/users/${user ? user._id : "invalid_user"}`;
             fetch(UpdateEndpoint, {
@@ -32,23 +37,29 @@ export default function EditProfileScreen() {
                 ToastController.show({
                     render: () => {
                         return (
-                            <Box backgroundColor="emerald.400" px={2} py={2}>
+                            <Box rounded="lg" backgroundColor="emerald.400" px={2} py={2}>
                                 <Text color="light.50">Successfully updated your profile.</Text>
                             </Box>
                         )
                     }
                 });
+
+                setUpdating(false);
             }).catch(err => {
                 ToastController.show({
                     render: () => {
                         return (
-                            <Box backgroundColor="red.400" px={2} py={2}>
+                            <Box rounded="lg" backgroundColor="red.400" px={2} py={2}>
                                 <Text color="light.50">Could not update your profile. Please try again.</Text>
                             </Box>
                         )
                     }
                 });
+
+                setUpdating(false);
             });
+        } else {
+            setUpdating(false);
         }
     }
 
@@ -68,8 +79,8 @@ export default function EditProfileScreen() {
             success = false;
         } else {
             const AHEndpoint = `${API_URL}api/users/handle/${values.accountHandle.trim()}`;
-            let inUse = await fetch(AHEndpoint).then(d => d.json());
-            if (inUse && user?.accountHandle != values.accountHandle) {
+            let inUse = await fetch(AHEndpoint).then(r => r.json());
+            if (inUse.data && user?.accountHandle != values.accountHandle) {
                 errs = { ...errs, accountHandle: `The account handle you have entered is already in use.` };
                 success = false;
             }
@@ -109,17 +120,23 @@ export default function EditProfileScreen() {
                                 'accountHandle' in errors ?
                                     <FormControl.ErrorMessage>{errors.accountHandle}</FormControl.ErrorMessage>
                                     :
-                                    null
+                                    <FormControl.HelperText flexDirection="row">{values.accountHandle ? values.accountHandle?.length : '0'} / 15</FormControl.HelperText>
                             }
                         </FormControl>
                         <FormControl isInvalid={`displayName` in errors} isRequired>
                             <FormControl.Label>Display Name</FormControl.Label>
-                            <Input type="text" placeholder="John Doe" variant="outline" value={values.displayName} onChangeText={(v) => setValues({ ...values, displayName: v })} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} />
+                            <Input type="text" placeholder="John Doe" variant="outline" value={values.displayName} onChangeText={(v) => {
+                                if (v.length <= 15) {
+                                    setValues({ ...values, displayName: v })
+                                } else {
+                                    v = values.displayName;
+                                }
+                            }} selectionColor={useColorModeValue("light.50", "dark.50")} color={useColorModeValue("light.50", "dark.50")} />
                             {
                                 'displayName' in errors ?
                                     <FormControl.ErrorMessage>{errors.displayName}</FormControl.ErrorMessage>
                                     :
-                                    null
+                                    <FormControl.HelperText flexDirection="row">{values.displayName ? values.displayName?.length : '0'} / 15</FormControl.HelperText>
                             }
                         </FormControl>
                         <FormControl>
@@ -140,7 +157,7 @@ export default function EditProfileScreen() {
                             </HStack>
                         </FormControl>
 
-                        <Button onPress={submitEdits} backgroundColor="violet.400">Update Profile</Button>
+                        <Button isLoading={updating} disabled={updating} onPress={submitEdits} backgroundColor="violet.400">Update Profile</Button>
                     </VStack>
                 </TouchableWithoutFeedback>
             </ScrollView>

@@ -6,9 +6,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 import HomeNavigation from "./HomeNavigation";
 import ProfileNavigation from "./ProfileNavigation";
-import SearchScreen from "../screens/SearchScreen";
-import { useContext } from "react";
-import { UserContext } from "../services/User";
+import SearchNavigation from "./SearchNavigation";
 
 const BottomTabs = createBottomTabNavigator();
 
@@ -40,7 +38,7 @@ export default function BottomTabNavigation() {
                 ),
                 tabBarActiveTintColor: "#a78bfa"
             }}/>
-            <BottomTabs.Screen name="Search" component={SearchScreen} options={{
+            <BottomTabs.Screen name="Search" component={SearchNavigation} options={{
                 tabBarLabel: "Search",
                 tabBarIcon: ({ color, size }) => (
                     <MaterialCommunityIcons name="magnify" color={color} size={size}/>
